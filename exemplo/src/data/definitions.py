@@ -10,12 +10,12 @@ from src.settings import Settings
 
 __all__ = [
     "DatasetType",
+    "DSColumns",
     "PreprocessedDataPeriod",
     "PreprocessedData",
     "PreprocessedDataWithDownSamples",
     "PreprocessLogicFunction",
     "PreprocessLogicFunctionArgs",
-    "DSColumns",
 ]
 
 
@@ -45,9 +45,9 @@ class PreprocessLogicFunctionArgs:
     output_dir: str
 
 
-type PreprocessLogicFunction = Callable[[PreprocessLogicFunctionArgs], PreprocessedData]
-
-
 @dataclass
 class PreprocessedDataWithDownSamples(PreprocessedData):
     downsamples: list[DataFrame] | None
+
+
+type PreprocessLogicFunction = Callable[[PreprocessLogicFunctionArgs], PreprocessedData]

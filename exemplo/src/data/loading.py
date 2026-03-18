@@ -184,7 +184,7 @@ def load_dataset(
     ds_type: str,
     input_dir: str = "datasets",
     output_dir: str = "results",
-):
+) -> PreprocessedData:
     """Perform the loading of a dataset of a specific type."""
 
     sanitized_ds_type = ds_type.strip().lower()
