@@ -1,15 +1,16 @@
+from typing import cast
 import pandas as pd
-from pandas._typing import Renamer
 import matplotlib.pyplot as plt
 
 from src.settings import Settings
 from .definitions import (
     DatasetType,
+    DSColumns,
     PreprocessedData,
     PreprocessedDataPeriod,
     PreprocessLogicFunction,
     PreprocessLogicFunctionArgs,
-    make_preprocessed_data,
+    PreprocessedDataWithDownSamples,
 )
 
 
@@ -18,9 +19,9 @@ def get_data_length(settings: Settings, ds_type: str) -> int | None:
 
     sanitized_ds_type = ds_type.strip().lower()
 
-    if sanitized_ds_type not in DatasetType.values:
+    if sanitized_ds_type not in DatasetType.values():
         raise ValueError(
-            f"Tipo de dataset inválido. Tipos suportados são: {','.join(DatasetType.values)}"
+            f"Tipo de dataset inválido. Tipos suportados são: {','.join(DatasetType.values())}"
         )
 
     # For a fixed data length
@@ -105,8 +106,8 @@ def preprocess_miris_ds(params: PreprocessLogicFunctionArgs) -> PreprocessedData
     # Measure the period of each time series
     preprocessed_period: pd.Timedelta = preprocessed.index[1] - preprocessed.index[0]
 
-    return make_preprocessed_data(
-        period=PreprocessedDataPeriod(
+    return PreprocessedDataWithDownSamples(
+        preprocessed_period=PreprocessedDataPeriod(
             period=preprocessed_period,
             total_seconds=preprocessed_period.total_seconds(),
         ),
@@ -140,8 +141,8 @@ def preprocess_power_quality_ds(
     # Measure the period of each time series
     preprocessed_period: pd.Timedelta = preprocessed.index[1] - preprocessed.index[0]
 
-    return make_preprocessed_data(
-        period=PreprocessedDataPeriod(
+    return PreprocessedData(
+        preprocessed_period=PreprocessedDataPeriod(
             period=preprocessed_period,
             total_seconds=preprocessed_period.total_seconds(),
         )
@@ -170,8 +171,8 @@ def preprocess_rye_generation_load_ds(
     # Measure the period of each time series
     preprocessed_period: pd.Timedelta = preprocessed.index[1] - preprocessed.index[0]
 
-    return make_preprocessed_data(
-        period=PreprocessedDataPeriod(
+    return PreprocessedData(
+        preprocessed_period=PreprocessedDataPeriod(
             period=preprocessed_period,
             total_seconds=preprocessed_period.total_seconds(),
         )
@@ -188,14 +189,15 @@ def load_dataset(
 
     sanitized_ds_type = ds_type.strip().lower()
 
-    if ds_type not in DatasetType.values:
+    if ds_type not in DatasetType.values():
         raise ValueError(
             f"Tipo de dataset inválido. Tipos suportados são: {','.join(DatasetType.values())}"
         )
 
-    ds_type_preprocessing_logic_map: dict[
-        str, dict[str, dict[str, str | Renamer] | PreprocessLogicFunction]
-    ] = {
+    type Args = dict[str, str | DSColumns]
+    # type Mapper = dict[str, PreprocessLogicFunction | Args]
+
+    ds_type_preprocessing_logic_map = {
         DatasetType.MIRIS.value: {
             "args": {
                 "ds_filepath": f"./{input_dir}/miris_load.csv",
@@ -219,17 +221,24 @@ def load_dataset(
         },
     }
 
-    preprocessing_logic: dict[str, Renamer | str] = ds_type_preprocessing_logic_map[
-        sanitized_ds_type
-    ]
-    preprocess_function: PreprocessLogicFunction = preprocessing_logic["callable"]
+    preprocessing_logic = ds_type_preprocessing_logic_map[sanitized_ds_type]
+    preprocessing_function = cast(
+        PreprocessLogicFunction, preprocessing_logic["callable"]
+    )
+    preprocessing_func_args = cast(Args, preprocessing_logic["args"])
+    data_length = get_data_length(settings, ds_type)
+
+    if data_length is None or (isinstance(data_length, int) and data_length == 0):
+        raise ValueError(
+            f"The data length for dataset '{sanitized_ds_type}' must be a positive integer"
+        )
 
     args = PreprocessLogicFunctionArgs(
         settings=settings,
-        data_length=get_data_length(settings, ds_type),
-        ds_filepath=preprocessing_logic["args"]["ds_filepath"],
-        columns=preprocessing_logic["args"]["columns"],
+        data_length=data_length,
+        ds_filepath=cast(str, preprocessing_func_args["ds_filepath"]),
+        columns=cast(DSColumns, preprocessing_func_args["columns"]),
         output_dir=output_dir,
     )
 
-    return preprocess_function(args)
+    return preprocessing_function(args)
