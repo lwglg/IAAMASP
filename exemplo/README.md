@@ -5,6 +5,7 @@
   - [TOC](#toc)
   - [Instalação de ambiente](#instalação-de-ambiente)
     - [Atualização de listagem de dependências](#atualização-de-listagem-de-dependências)
+  - [Análise estática](#análise-estática)
   - [O que deseja fazer?](#o-que-deseja-fazer)
 
 
@@ -36,6 +37,15 @@ Isso apenas listará em `requirements.txt` as packages (e suas versões) primár
 > [!NOTE]
 > As dependências de desenvolvimento (stubs de tipos, `mypy` e `ruff` ) estão também listadas em `requirements.txt`. Talvez fosse interessante separá-las em um arquivo `requirements-dev.txt` ou até mesmo usar um package manager que facilite esse projeto, e.g. `poetry` ou `uv`.
 >
+
+## Análise estática
+
+Para mantenimento da qualidade e das boas práticas de programação, as ferramentas `ruff` e `mypy` estão sendo aplicadas a análise estática do código-fonte i.e. padrões de formatação e de declarações de tipos (PEPs). Foram implementados alguns scripts que automatizam esse processo:
+
+```bash
+$ ./scripts/format.sh   # Realiza a formatação via RUFF
+$ ./scripts/lint.sh     # Realiza o linting do via MYPY
+```
 
 --
 
