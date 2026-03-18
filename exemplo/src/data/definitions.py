@@ -21,7 +21,7 @@ __all__ = [
 
 class DatasetType(BaseEnum):
     MIRIS = "miris"
-    POWER_QUALITY = ("power_quality",)
+    POWER_QUALITY = "power_quality"
     RYE_GENERATION_LOAD = "rye_generation_load"
 
 
